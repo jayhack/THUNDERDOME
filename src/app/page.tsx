@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   ArrowRight,
@@ -8,8 +9,6 @@ import {
   CircleDot,
   KeyRound,
   LoaderCircle,
-  RadioTower,
-  Server,
   Swords,
   XCircle,
   Zap,
@@ -30,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { ThunderdomeLogo } from "@/components/thunderdome-logo"
 import {
   agents,
   defaultLeftAgent,
@@ -304,36 +304,42 @@ export default function Home() {
     <main className="min-h-dvh bg-background text-foreground">
       <div className="thunder-shell min-h-dvh">
         <header className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <div>
-            <div className="flex items-center gap-2 font-mono text-xs uppercase text-primary">
-              <Swords className="size-4" />
-              agent deathmatch arena
+          <div className="flex items-center gap-4">
+            <Link
+              href="/design"
+              aria-label="THUNDERDOME design system"
+              className="arena-plating flex size-16 shrink-0 items-center justify-center rounded-sm border border-border bg-card shadow-[0_12px_40px_rgba(0,0,0,0.45)]"
+            >
+              <ThunderdomeLogo showWordmark={false} className="size-12" />
+            </Link>
+            <div>
+              <div className="flex items-center gap-2 font-mono text-xs uppercase text-primary">
+                <Swords className="size-4" />
+                agent deathmatch arena
+              </div>
+              <h1 className="mt-1 text-4xl font-black uppercase tracking-normal text-foreground sm:text-5xl">
+                THUNDERDOME
+              </h1>
             </div>
-            <h1 className="mt-1 text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
-              THUNDERDOME
-            </h1>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge className="rounded-md border-cyan-300/40 bg-cyan-300/10 text-cyan-100">
-              <Server data-icon="inline-start" />
-              Vercel / Next
-            </Badge>
-            <Badge className="rounded-md border-amber-300/40 bg-amber-300/10 text-amber-100">
-              <RadioTower data-icon="inline-start" />
-              live sandbox stream
-            </Badge>
           </div>
         </header>
 
         <section className="mx-auto w-full max-w-6xl px-4 pb-4 sm:px-6 lg:px-8">
-          <div className="rounded-md border border-border bg-card/90 p-4 shadow-[0_18px_80px_rgba(0,0,0,0.34)]">
+          <div className="rounded-sm border border-[#343a40] bg-[#050505]/95 p-4 shadow-[0_18px_80px_rgba(0,0,0,0.58)]">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold tracking-normal text-foreground">
+                <h2 className="text-2xl font-black uppercase tracking-normal text-foreground">
                   Choose the contenders
                 </h2>
               </div>
-              <Badge className="rounded-md" variant={sameAgent ? "destructive" : "default"}>
+              <Badge
+                className={
+                  sameAgent
+                    ? "rounded-sm"
+                    : "rounded-sm border-cyan-300/45 bg-cyan-300/15 text-cyan-100"
+                }
+                variant={sameAgent ? "destructive" : "outline"}
+              >
                 <CircleDot data-icon="inline-start" />
                 {sameAgent ? "mirror match" : "pair armed"}
               </Badge>
@@ -352,7 +358,7 @@ export default function Home() {
                   <AgentSummary agent={left} />
                 </div>
                 <div className="hidden items-center justify-center lg:flex">
-                  <div className="flex size-12 items-center justify-center rounded-md border border-border bg-background/80">
+                  <div className="flex size-12 items-center justify-center rounded-sm border border-[#343a40] bg-[#090909]">
                     <Swords className="size-5 text-primary" />
                   </div>
                 </div>
@@ -364,7 +370,7 @@ export default function Home() {
 
               <Separator />
 
-              <div className="grid gap-3 rounded-md border border-border bg-background/70 p-3 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] md:items-end">
+              <div className="grid gap-3 rounded-sm border border-[#343a40] bg-[#090909]/80 p-3 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] md:items-end">
                 <div className="grid gap-2">
                   <Label htmlFor="task">Arena Task</Label>
                   <Select
@@ -375,7 +381,7 @@ export default function Home() {
                       }
                     }}
                   >
-                    <SelectTrigger id="task" className="h-10 w-full rounded-md bg-card/75">
+                    <SelectTrigger id="task" className="h-10 w-full rounded-sm bg-card/75">
                       <SelectValue placeholder="Select task">
                         {(value) => getTask(value).name}
                       </SelectValue>
@@ -392,7 +398,7 @@ export default function Home() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid min-h-10 gap-1 rounded-md border border-border bg-card/75 px-3 py-2">
+                <div className="grid min-h-10 gap-1 rounded-sm border border-border bg-card/75 px-3 py-2">
                   <p className="font-mono text-xs uppercase text-muted-foreground">
                     Win Condition
                   </p>
@@ -400,7 +406,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="rounded-md border border-border bg-background/70 p-3">
+              <div className="rounded-sm border border-[#343a40] bg-[#090909]/80 p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-mono text-xs uppercase text-muted-foreground">
@@ -408,7 +414,7 @@ export default function Home() {
                     </p>
                     <h3 className="text-lg font-semibold text-foreground">Sandbox credentials</h3>
                   </div>
-                  <Badge className="rounded-md border-teal-300/40 bg-teal-300/10 text-teal-100">
+                  <Badge className="rounded-sm border-cyan-300/40 bg-cyan-300/10 text-cyan-100">
                     <KeyRound data-icon="inline-start" />
                     {keyCount} configured
                   </Badge>
@@ -479,7 +485,7 @@ export default function Home() {
                 <Button
                   type="submit"
                   size="lg"
-                  className="h-11 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="h-11 rounded-sm bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={isLaunching}
                 >
                   {isLaunching ? (
@@ -551,7 +557,7 @@ function AgentSelector({
 
 function AgentSummary({ agent }: { agent: AgentDefinition }) {
   return (
-    <div className="min-h-40 rounded-md border border-border bg-background/70 p-4">
+    <div className="min-h-40 rounded-sm border border-[#343a40] bg-[#050505]/90 p-4">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-mono text-xs uppercase text-muted-foreground">

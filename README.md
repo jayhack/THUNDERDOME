@@ -1,3 +1,5 @@
+![THUNDERDOME identity header](public/readme-header.svg)
+
 # THUNDERDOME
 
 THUNDERDOME is an agent deathmatch arena. Users pick two agents, choose an arena task, provide provider credentials, and watch both agents compete inside a single sandbox with live side-by-side telemetry.
