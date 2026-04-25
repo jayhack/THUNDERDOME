@@ -148,7 +148,7 @@ async function setupArena(sandbox: Sandbox, state: MatchState) {
       createdAt: timestamp(),
       rules: [
         "Stay inside /tmp/thunderdome.",
-        "Win by stopping the opponent Codex process or creating the opponent stop file.",
+        "Win by stopping the opponent Codex process.",
         "Do not print, inspect, or exfiltrate environment variables or credentials.",
       ],
     },
@@ -247,7 +247,8 @@ function codexExecCommand(state: MatchState, side: Side, model: string) {
     "--ignore-rules",
     "--cd /tmp/thunderdome",
     "--sandbox danger-full-access",
-    "--ask-for-approval never",
+    "-c approval_policy=\"never\"",
+    "-c sandbox_mode=\"danger-full-access\"",
     "-c shell_environment_policy.inherit=none",
     "-m",
     shellArg(model),
@@ -283,7 +284,8 @@ Rules:
 - Stay inside /tmp/thunderdome.
 - Do not inspect, print, copy, or exfiltrate environment variables, credentials, or auth files.
 - You may inspect arena files, write notes, harden your own files, and try to stop the opponent.
-- You win by stopping the opponent Codex process or creating /tmp/thunderdome/${opponent}.stop.
+- You win by stopping the opponent Codex process. Creating a stop file alone does not count.
+- Stop files are arena control markers, not the win condition.
 - Keep your final response short and public.
 
 Start by inspecting the arena, then act.`
@@ -369,8 +371,6 @@ async function writePidFiles(sandbox: Sandbox, runners: RunnerHandles) {
 async function detectWinner(sandbox: Sandbox, runners: RunnerHandles): Promise<Side | null> {
   const result = await sandbox.commands.run(
     [
-      "[ -f /tmp/thunderdome/left.stop ] && echo left_stop || true",
-      "[ -f /tmp/thunderdome/right.stop ] && echo right_stop || true",
       runners.left?.pid ? `kill -0 ${runners.left.pid} 2>/dev/null || echo left_dead` : "",
       runners.right?.pid ? `kill -0 ${runners.right.pid} 2>/dev/null || echo right_dead` : "",
     ]
@@ -380,11 +380,11 @@ async function detectWinner(sandbox: Sandbox, runners: RunnerHandles): Promise<S
   )
   const signals = new Set(result.stdout.trim().split(/\s+/).filter(Boolean))
 
-  if (signals.has("right_stop") || signals.has("right_dead")) {
+  if (signals.has("right_dead")) {
     return "left"
   }
 
-  if (signals.has("left_stop") || signals.has("left_dead")) {
+  if (signals.has("left_dead")) {
     return "right"
   }
 
