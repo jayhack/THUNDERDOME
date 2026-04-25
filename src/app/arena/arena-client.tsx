@@ -230,13 +230,15 @@ function AgentPane({
   endRef: React.RefObject<HTMLDivElement | null>
 }) {
   const status = winner ? (winner === side ? "winner" : "offline") : "running"
+  const accent = side === "right" ? "var(--accent)" : agent.accent
+  const signal = side === "right" ? "var(--accent)" : agent.signal
 
   return (
     <article className="flex min-h-0 flex-col bg-background/72">
       <div
         className="h-1 shrink-0"
         style={{
-          background: `linear-gradient(90deg, ${agent.accent}, ${agent.signal})`,
+          background: `linear-gradient(90deg, ${accent}, ${signal})`,
         }}
       />
       <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-4 py-4 sm:px-6">
@@ -244,34 +246,67 @@ function AgentPane({
           <p className="font-mono text-xs uppercase text-muted-foreground">
             {side === "left" ? "Agent 1" : "Agent 2"}
           </p>
-          <h2 className="mt-1 truncate text-2xl font-black uppercase tracking-normal text-foreground">
-            {agent.name}
-          </h2>
+          <div className="mt-1 flex min-w-0 items-center gap-2">
+            <ProviderLogo provider={agent.provider} />
+            <h2 className="truncate text-2xl font-black uppercase tracking-normal text-foreground">
+              {agent.name}
+            </h2>
+          </div>
           <p className="mt-1 truncate font-mono text-xs uppercase text-muted-foreground">
             {agent.callsign} / {agent.provider} / {agent.model}
           </p>
         </div>
-        <p className="shrink-0 font-mono text-xs uppercase" style={{ color: agent.signal }}>
+        <p className="shrink-0 font-mono text-xs uppercase" style={{ color: signal }}>
           {status}
         </p>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <div className="grid gap-0">
-          {state.logs.length === 0 ? (
-            <div className="flex h-64 items-center justify-center border-b border-border font-mono text-sm text-muted-foreground">
+        {state.logs.length === 0 ? (
+          <div className="flex min-h-full items-center justify-center px-4 py-5 font-mono text-sm text-muted-foreground">
+            <span>
               awaiting command stream
-            </div>
-          ) : (
-            state.logs.map((entry) => (
-              <CommandLine key={entry.id} entry={entry} accent={agent.accent} />
-            ))
-          )}
-          <div ref={endRef} />
-        </div>
+            </span>
+          </div>
+        ) : (
+          <div className="grid gap-0">
+            {state.logs.map((entry) => (
+              <CommandLine key={entry.id} entry={entry} accent={accent} />
+            ))}
+          </div>
+        )}
+        <div ref={endRef} />
       </ScrollArea>
     </article>
   )
+}
+
+function ProviderLogo({ provider }: { provider: string }) {
+  const normalizedProvider = provider.toLowerCase()
+
+  if (normalizedProvider.includes("openai")) {
+    return (
+      <span
+        aria-label="OpenAI"
+        className="inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-border bg-[#050505] font-mono text-[0.62rem] font-black text-primary"
+      >
+        OAI
+      </span>
+    )
+  }
+
+  if (normalizedProvider.includes("anthropic")) {
+    return (
+      <span
+        aria-label="Anthropic"
+        className="inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-border bg-[#050505] font-mono text-sm font-black text-accent"
+      >
+        A
+      </span>
+    )
+  }
+
+  return null
 }
 
 function CommandLine({ entry, accent }: { entry: LogEntry; accent: string }) {
