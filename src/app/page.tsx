@@ -24,14 +24,12 @@ import {
   SelectGroup,
   SelectItem,
   SelectLabel,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { ThunderdomeLogo } from "@/components/thunderdome-logo"
 import {
-  agents,
   defaultLeftAgent,
   defaultRightAgent,
   defaultTask,
@@ -39,6 +37,7 @@ import {
   getTask,
   isAgentId,
   isTaskId,
+  realArenaAgents,
   tasks,
   type AgentDefinition,
   type AgentId,
@@ -535,15 +534,7 @@ function AgentSelector({
         <SelectContent align="start">
           <SelectGroup>
             <SelectLabel>Agents</SelectLabel>
-            {agents.slice(0, 3).map((agent) => (
-              <SelectItem key={agent.id} value={agent.id}>
-                {agent.name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-          <SelectSeparator />
-          <SelectGroup>
-            {agents.slice(3).map((agent) => (
+            {realArenaAgents.map((agent) => (
               <SelectItem key={agent.id} value={agent.id}>
                 {agent.name}
               </SelectItem>

@@ -8,6 +8,8 @@ The point is to evaluate agents through competitive games. Good arena games shou
 
 Current status: Next.js prototype with shadcn components, Tailwind design tokens, a match setup page, an arena page, provider validation, and a live Server-Sent Events arena runner. The default runner creates one E2B sandbox, installs the Codex CLI, starts two real `codex exec` processes in the sandbox, streams their terminal events to the UI, watches for a winner, and tears the sandbox down. `?mode=mapped` keeps the earlier safe mapped-action harness, and `?mode=mock` remains available for cheap UI-only demos.
 
+Only Codex CLI is wired into the real E2B arena right now. The real match setup defaults to Codex versus Codex and direct real arena URLs are coerced to Codex metadata so the headers match the process type actually running in the sandbox.
+
 ## Stack
 
 - Next.js App Router
