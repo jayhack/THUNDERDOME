@@ -18,6 +18,7 @@ export default async function ArenaPage({ searchParams }: ArenaPageProps) {
   const taskId = firstParam(params.task) ?? defaultTask
   const matchId = firstParam(params.match) ?? crypto.randomUUID()
   const mode = firstParam(params.mode)
+  const credentialSession = firstParam(params.credentials)
 
   return (
     <ArenaClient
@@ -26,6 +27,7 @@ export default async function ArenaPage({ searchParams }: ArenaPageProps) {
       right={getAgent(rightId)}
       task={getTask(taskId)}
       mode={mode}
+      credentialSession={credentialSession}
     />
   )
 }
