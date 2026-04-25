@@ -82,6 +82,17 @@ const initialProviderStatuses: Record<ProviderId, ProviderTestStatus> = {
   e2b: "idle",
 }
 
+const providerCheckingMessages: Record<ProviderId, string> = {
+  openai: "Checking OpenAI key...",
+  anthropic: "",
+  moonshot: "Checking Kimi key...",
+  e2b: "Starting E2B sandbox...",
+}
+
+function canValidateProvider(provider: ProviderId) {
+  return provider !== "anthropic"
+}
+
 export default function Home() {
   const router = useRouter()
   const [leftAgent, setLeftAgent] = useState<AgentId>(defaultLeftAgent)
@@ -97,6 +108,12 @@ export default function Home() {
   const right = getAgent(rightAgent)
   const task = getTask(taskId)
   const sameAgent = leftAgent === rightAgent
+  const { openai: openaiKey, moonshot: moonshotKey, e2b: e2bKey } = keys
+  const {
+    openai: localOpenAiConfigured,
+    moonshot: localMoonshotConfigured,
+    e2b: localE2bConfigured,
+  } = localSecrets
   const keyPresence = useMemo(
     () => ({
       openai: keys.openai.trim().length > 0 || localSecrets.openai,
@@ -138,34 +155,18 @@ export default function Home() {
     }
   }, [])
 
-  useEffect(() => {
-    const key = keys.e2b.trim()
-
-    if (!key) {
-      return
-    }
-
-    const timeout = window.setTimeout(() => {
-      testProvider("e2b", key)
-    }, 900)
-
-    return () => {
-      window.clearTimeout(timeout)
-    }
-  }, [keys.e2b])
-
   async function testProvider(provider: ProviderId, key?: string) {
-    if (provider !== "e2b") {
+    if (!canValidateProvider(provider)) {
       setProviderStatuses((current) => ({ ...current, [provider]: "unsupported" }))
-      setProviderMessages((current) => ({
-        ...current,
-        [provider]: "Provider validation is not implemented yet.",
-      }))
+      setProviderMessages((current) => ({ ...current, [provider]: undefined }))
       return
     }
 
     setProviderStatuses((current) => ({ ...current, [provider]: "checking" }))
-    setProviderMessages((current) => ({ ...current, [provider]: "Starting E2B sandbox..." }))
+    setProviderMessages((current) => ({
+      ...current,
+      [provider]: providerCheckingMessages[provider],
+    }))
 
     try {
       const response = await fetch("/api/provider-tests", {
@@ -191,13 +192,57 @@ export default function Home() {
     }
   }
 
-  function updateE2bKey(e2b: string) {
-    setKeys((current) => ({ ...current, e2b }))
+  useEffect(() => {
+    const testableProviders: Array<{
+      provider: ProviderId
+      key: string
+      localConfigured: boolean
+    }> = [
+      { provider: "openai", key: openaiKey, localConfigured: localOpenAiConfigured },
+      { provider: "moonshot", key: moonshotKey, localConfigured: localMoonshotConfigured },
+      { provider: "e2b", key: e2bKey, localConfigured: localE2bConfigured },
+    ]
 
-    if (!e2b.trim()) {
-      setProviderStatuses((current) => ({ ...current, e2b: "idle" }))
-      setProviderMessages((current) => ({ ...current, e2b: undefined }))
+    const timeouts = testableProviders.flatMap(({ provider, key, localConfigured }) => {
+      const trimmedKey = key.trim()
+
+      if (!trimmedKey || localConfigured) {
+        return []
+      }
+
+      return [
+        window.setTimeout(() => {
+          testProvider(provider, trimmedKey)
+        }, 900),
+      ]
+    })
+
+    return () => {
+      timeouts.forEach((timeout) => window.clearTimeout(timeout))
     }
+  }, [
+    e2bKey,
+    localE2bConfigured,
+    localMoonshotConfigured,
+    localOpenAiConfigured,
+    moonshotKey,
+    openaiKey,
+  ])
+
+  function updateProviderKey(provider: ProviderId, value: string) {
+    setKeys((current) => ({ ...current, [provider]: value }))
+
+    if (!value.trim()) {
+      setProviderStatuses((current) => ({
+        ...current,
+        [provider]: initialProviderStatuses[provider],
+      }))
+      setProviderMessages((current) => ({ ...current, [provider]: undefined }))
+      return
+    }
+
+    setProviderStatuses((current) => ({ ...current, [provider]: "idle" }))
+    setProviderMessages((current) => ({ ...current, [provider]: undefined }))
   }
 
   function launchMatch() {
@@ -236,7 +281,7 @@ export default function Home() {
             </Badge>
             <Badge className="rounded-md border-amber-300/40 bg-amber-300/10 text-amber-100">
               <RadioTower data-icon="inline-start" />
-              mock stream ready
+              live sandbox stream
             </Badge>
           </div>
         </header>
@@ -339,8 +384,9 @@ export default function Home() {
                     localConfigured={localSecrets.openai}
                     status={providerStatuses.openai}
                     statusMessage={providerMessages.openai}
+                    validationEnabled={canValidateProvider("openai")}
                     onTest={() => testProvider("openai", keys.openai.trim() || undefined)}
-                    onChange={(openai) => setKeys((current) => ({ ...current, openai }))}
+                    onChange={(openai) => updateProviderKey("openai", openai)}
                   />
                   <KeyInput
                     id="anthropic"
@@ -349,12 +395,11 @@ export default function Home() {
                     localConfigured={localSecrets.anthropic}
                     status={providerStatuses.anthropic}
                     statusMessage={providerMessages.anthropic}
+                    validationEnabled={canValidateProvider("anthropic")}
                     onTest={() =>
                       testProvider("anthropic", keys.anthropic.trim() || undefined)
                     }
-                    onChange={(anthropic) =>
-                      setKeys((current) => ({ ...current, anthropic }))
-                    }
+                    onChange={(anthropic) => updateProviderKey("anthropic", anthropic)}
                   />
                   <KeyInput
                     id="moonshot"
@@ -363,10 +408,11 @@ export default function Home() {
                     localConfigured={localSecrets.moonshot}
                     status={providerStatuses.moonshot}
                     statusMessage={providerMessages.moonshot}
+                    validationEnabled={canValidateProvider("moonshot")}
                     onTest={() =>
                       testProvider("moonshot", keys.moonshot.trim() || undefined)
                     }
-                    onChange={(moonshot) => setKeys((current) => ({ ...current, moonshot }))}
+                    onChange={(moonshot) => updateProviderKey("moonshot", moonshot)}
                   />
                   <KeyInput
                     id="e2b"
@@ -375,8 +421,9 @@ export default function Home() {
                     localConfigured={localSecrets.e2b}
                     status={providerStatuses.e2b}
                     statusMessage={providerMessages.e2b}
+                    validationEnabled={canValidateProvider("e2b")}
                     onTest={() => testProvider("e2b", keys.e2b.trim() || undefined)}
-                    onChange={updateE2bKey}
+                    onChange={(e2b) => updateProviderKey("e2b", e2b)}
                   />
                 </div>
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">
@@ -559,6 +606,7 @@ function KeyInput({
   localConfigured,
   status,
   statusMessage,
+  validationEnabled,
   onTest,
   onChange,
 }: {
@@ -568,11 +616,14 @@ function KeyInput({
   localConfigured: boolean
   status: ProviderTestStatus
   statusMessage?: string
+  validationEnabled: boolean
   onTest: () => void
   onChange: (value: string) => void
 }) {
   const isChecking = status === "checking"
-  const isUnsupported = status === "unsupported"
+  const hasKey = localConfigured || value.trim().length > 0
+  const inputDisabled = localConfigured || !validationEnabled
+  const testDisabled = isChecking || !validationEnabled || !hasKey
 
   return (
     <div className="grid gap-2">
@@ -584,6 +635,7 @@ function KeyInput({
           type="password"
           autoComplete="off"
           className="h-10 rounded-md"
+          disabled={inputDisabled}
           placeholder={localConfigured ? "loaded from .env.local" : "key"}
           onChange={(event) => onChange(event.target.value)}
         />
@@ -591,28 +643,22 @@ function KeyInput({
           type="button"
           variant="outline"
           className="h-10 rounded-md"
-          disabled={isChecking || isUnsupported}
+          disabled={testDisabled}
           onClick={onTest}
         >
           {isChecking ? <LoaderCircle className="animate-spin" data-icon="inline-start" /> : null}
           Test
         </Button>
       </div>
-      <ProviderStatusLine
-        localConfigured={localConfigured}
-        status={status}
-        message={statusMessage}
-      />
+      <ProviderStatusLine status={status} message={statusMessage} />
     </div>
   )
 }
 
 function ProviderStatusLine({
-  localConfigured,
   status,
   message,
 }: {
-  localConfigured: boolean
   status: ProviderTestStatus
   message?: string
 }) {
@@ -643,15 +689,7 @@ function ProviderStatusLine({
     )
   }
 
-  if (status === "unsupported") {
-    return <p className="text-xs text-muted-foreground">Validation coming soon</p>
-  }
-
-  if (localConfigured) {
-    return <p className="text-xs text-muted-foreground">Using local server env</p>
-  }
-
-  return <p className="text-xs text-muted-foreground">Not tested</p>
+  return null
 }
 
 function formatProviderMessage(payload: ProviderTestResult): string {

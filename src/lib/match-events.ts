@@ -10,6 +10,11 @@ export type ArenaStreamEvent =
       at: string
     }
   | {
+      type: "error"
+      message: string
+      at: string
+    }
+  | {
       type: "agent"
       side: Exclude<StreamSide, "system">
       level: "signal" | "tool" | "strike" | "guard"
