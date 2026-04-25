@@ -75,6 +75,16 @@ export function ArenaClient({ matchId, left, right, task }: ArenaClientProps) {
         ])
       }
 
+      if (event.type === "error") {
+        setPhase("resolution")
+        setSystemLog((current) => [
+          ...current,
+          toLogEntry(event.at, event.message, "result"),
+        ])
+        eventSource.close()
+        setConnected(false)
+      }
+
       if (event.type === "agent") {
         const applyEvent = (current: SideState): SideState => ({
           integrity: event.integrity,

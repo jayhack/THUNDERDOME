@@ -1,6 +1,8 @@
+import { generateLiveMatchEvents } from "@/lib/live-match-events"
 import { encodeSse, generateMatchEvents } from "@/lib/match-events"
 
 export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 export async function GET(
   request: Request,
@@ -11,7 +13,11 @@ export async function GET(
   const left = url.searchParams.get("left")
   const right = url.searchParams.get("right")
   const task = url.searchParams.get("task")
-  const iterator = generateMatchEvents(matchId, left, right, task)
+  const mode = url.searchParams.get("mode")
+  const iterator =
+    mode === "mock"
+      ? generateMatchEvents(matchId, left, right, task)
+      : generateLiveMatchEvents(matchId, left, right, task)
 
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {
