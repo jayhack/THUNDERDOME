@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-label="THUNDERDOME identity header">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1280" y1="0" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#050505"/>
+      <stop offset="0.48" stop-color="#11100d"/>
+      <stop offset="1" stop-color="#050505"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="95" x2="245" y1="62" y2="304" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f8fbff"/>
+      <stop offset="0.42" stop-color="#d7dde2"/>
+      <stop offset="1" stop-color="#7b858c"/>
+    </linearGradient>
+    <filter id="hard-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="14" dy="14" stdDeviation="0" flood-color="#000000" flood-opacity="0.8"/>
+      <feDropShadow dx="-4" dy="-4" stdDeviation="0" flood-color="#28f0d4" flood-opacity="0.35"/>
+      <feDropShadow dx="5" dy="0" stdDeviation="0" flood-color="#ff2f7d" flood-opacity="0.35"/>
+    </filter>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#edf3f7" stroke-opacity="0.055" stroke-width="1"/>
+    </pattern>
+    <pattern id="scratches" width="180" height="90" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)">
+      <path d="M12 12h84M42 34h128M4 63h64M104 70h58" stroke="#edf3f7" stroke-opacity="0.075" stroke-width="2"/>
+      <path d="M20 25h42M86 51h74" stroke="#050505" stroke-opacity="0.7" stroke-width="4"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="420" fill="url(#bg)"/>
+  <rect width="1280" height="420" fill="url(#grid)"/>
+  <rect width="1280" height="420" fill="url(#scratches)"/>
+  <path d="M0 340 1280 112v84L0 420Z" fill="#28f0d4" opacity="0.09"/>
+  <path d="M0 298 1280 54v48L0 352Z" fill="#c64720" opacity="0.16"/>
+  <path d="M0 0h1280v14H0zM0 406h1280v14H0z" fill="#050505"/>
+  <path d="M44 36h1192M44 384h1192" stroke="#5b646b" stroke-opacity="0.5" stroke-width="2"/>
+
+  <g transform="translate(78 46) scale(1.9)" filter="url(#hard-shadow)">
+    <path d="M86 10 30 88h42l-18 66 82-94H94l18-50H86Z" fill="#050505" stroke="#050505" stroke-width="14" stroke-linejoin="miter"/>
+    <path d="M86 10 30 88h42l-18 66 82-94H94l18-50H86Z" fill="url(#metal)" stroke="#edf3f7" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M86 10 30 88h42l-18 66 82-94H94l18-50H86Z" fill="none" stroke="#060606" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M42 88h30L55 151l45-52" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="square"/>
+    <path d="M30 118h30M21 132h34" stroke="#28f0d4" stroke-width="5" stroke-linecap="square"/>
+    <path d="M105 36h34M96 50h29" stroke="#ff2f7d" stroke-width="5" stroke-linecap="square"/>
+  </g>
+
+  <g transform="translate(372 124)">
+    <text x="0" y="0" fill="#edf3f7" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="78" font-weight="900" letter-spacing="8" stroke="#050505" stroke-width="10" paint-order="stroke">THUNDERDOME</text>
+    <path d="M2 31h604l-28 10H2z" fill="#28f0d4"/>
+    <path d="M2 58h438l-28 10H2z" fill="#ff2f7d"/>
+    <text x="0" y="116" fill="#b8c0c6" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24" font-weight="700" letter-spacing="3">AGENT DEATHMATCH ARENA</text>
+    <text x="0" y="160" fill="#edf3f7" fill-opacity="0.78" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">blackened steel / scratched chrome / adversarial telemetry</text>
+  </g>
+
+  <g transform="translate(372 324)">
+    <rect width="112" height="14" fill="#050505" stroke="#5b646b"/>
+    <rect x="132" width="112" height="14" fill="#4b545b" stroke="#5b646b"/>
+    <rect x="264" width="112" height="14" fill="#edf3f7" stroke="#5b646b"/>
+    <rect x="396" width="112" height="14" fill="#28f0d4" stroke="#5b646b"/>
+    <rect x="528" width="112" height="14" fill="#ff2f7d" stroke="#5b646b"/>
+    <rect x="660" width="112" height="14" fill="#c64720" stroke="#5b646b"/>
+  </g>
+</svg>

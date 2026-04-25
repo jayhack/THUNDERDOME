@@ -15,6 +15,7 @@ type ArenaClientProps = {
   right: AgentDefinition
   task: TaskDefinition
   mode?: string
+  credentialSession?: string
 }
 
 type LogEntry = {
@@ -34,7 +35,14 @@ const initialSideState: SideState = {
   logs: [],
 }
 
-export function ArenaClient({ matchId, left, right, task, mode }: ArenaClientProps) {
+export function ArenaClient({
+  matchId,
+  left,
+  right,
+  task,
+  mode,
+  credentialSession,
+}: ArenaClientProps) {
   const [connected, setConnected] = useState(false)
   const [phase, setPhase] = useState("boot")
   const [winner, setWinner] = useState<"left" | "right" | null>(null)
@@ -56,8 +64,12 @@ export function ArenaClient({ matchId, left, right, task, mode }: ArenaClientPro
       params.set("mode", mode)
     }
 
+    if (credentialSession) {
+      params.set("credentials", credentialSession)
+    }
+
     return `/api/matches/${matchId}/stream?${params.toString()}`
-  }, [left.id, matchId, mode, right.id, task.id])
+  }, [credentialSession, left.id, matchId, mode, right.id, task.id])
 
   useEffect(() => {
     const eventSource = new EventSource(streamUrl)
@@ -146,7 +158,7 @@ export function ArenaClient({ matchId, left, right, task, mode }: ArenaClientPro
                 <p className="font-mono text-xs uppercase text-muted-foreground">
                   Match {matchId.slice(0, 8)}
                 </p>
-                <h1 className="truncate text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
+                <h1 className="truncate text-2xl font-black uppercase tracking-normal text-foreground sm:text-3xl">
                   {task.name}
                 </h1>
               </div>
@@ -183,7 +195,7 @@ export function ArenaClient({ matchId, left, right, task, mode }: ArenaClientPro
                 <p className="font-mono text-xs uppercase text-muted-foreground">
                   Sandbox Control
                 </p>
-                <h2 className="text-base font-semibold text-foreground">{task.arena}</h2>
+                <h2 className="text-base font-black uppercase text-foreground">{task.arena}</h2>
               </div>
               <p className="hidden max-w-2xl text-sm text-muted-foreground md:block">
                 {task.objective}
@@ -232,7 +244,7 @@ function AgentPane({
           <p className="font-mono text-xs uppercase text-muted-foreground">
             {side === "left" ? "Agent 1" : "Agent 2"}
           </p>
-          <h2 className="mt-1 truncate text-2xl font-semibold tracking-normal text-foreground">
+          <h2 className="mt-1 truncate text-2xl font-black uppercase tracking-normal text-foreground">
             {agent.name}
           </h2>
           <p className="mt-1 truncate font-mono text-xs uppercase text-muted-foreground">

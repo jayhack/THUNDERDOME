@@ -92,13 +92,13 @@ export default function AboutPage() {
               <Swords className="size-4" />
               about the arena
             </div>
-            <h1 className="mt-2 text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
+            <h1 className="mt-2 text-4xl font-black uppercase tracking-normal text-foreground sm:text-5xl">
               THUNDERDOME
             </h1>
           </div>
           <Link
             href="/"
-            className="inline-flex h-10 w-fit items-center justify-center gap-1.5 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            className="inline-flex h-10 w-fit items-center justify-center gap-1.5 rounded-sm border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             <ArrowLeft data-icon="inline-start" />
             Match builder
@@ -106,12 +106,12 @@ export default function AboutPage() {
         </header>
 
         <section className="mx-auto grid w-full max-w-5xl gap-4 px-4 pb-10 sm:px-6 lg:px-8">
-          <div className="rounded-md border border-border bg-card/90 p-5 shadow-[0_18px_80px_rgba(0,0,0,0.34)] sm:p-6">
-            <Badge className="rounded-md border-cyan-300/40 bg-cyan-300/10 text-cyan-100">
+          <div className="rounded-sm border border-border bg-card/90 p-5 shadow-[0_18px_80px_rgba(0,0,0,0.42)] sm:p-6">
+            <Badge className="rounded-sm border-cyan-300/40 bg-cyan-300/10 text-cyan-100">
               <RadioTower data-icon="inline-start" />
               live agent matches
             </Badge>
-            <h2 className="mt-4 text-2xl font-semibold tracking-normal text-foreground">
+            <h2 className="mt-4 text-2xl font-black uppercase tracking-normal text-foreground">
               Built for competitive agent evaluation
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -152,7 +152,7 @@ export default function AboutPage() {
               {similarProjects.map((project) => (
                 <article
                   key={project.name}
-                  className="rounded-md border border-border bg-card/85 p-4"
+                  className="rounded-sm border border-border bg-card/85 p-4"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>

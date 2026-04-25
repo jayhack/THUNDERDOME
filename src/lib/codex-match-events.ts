@@ -5,6 +5,7 @@ import {
   type ArenaStreamEvent,
   type StreamSide,
 } from "@/lib/match-events"
+import { type MatchCredentialSecrets } from "@/lib/match-credentials"
 import { getSecretValue } from "@/lib/server-secrets"
 
 type Side = Exclude<StreamSide, "system">
@@ -36,14 +37,17 @@ export async function* generateCodexMatchEvents(
   matchId: string,
   leftId: string | null,
   rightId: string | null,
-  taskId: string | null
+  taskId: string | null,
+  credentials?: MatchCredentialSecrets
 ): AsyncGenerator<ArenaStreamEvent> {
   const state = createInitialMatchState(matchId, leftId, rightId, taskId)
-  const e2bKey = getSecretValue("E2B_API_KEY")
-  const openAiKey = getSecretValue("OPENAI_API_KEY")
+  const e2bKey = credentials?.e2b ?? getSecretValue("E2B_API_KEY")
+  const openAiKey = credentials?.openai ?? getSecretValue("OPENAI_API_KEY")
 
   if (!e2bKey || !openAiKey) {
-    yield errorEvent("Codex arena requires E2B_API_KEY and OPENAI_API_KEY in .env.local.")
+    yield errorEvent(
+      "Codex arena requires OpenAI and E2B credentials. Add OPENAI_API_KEY and E2B_API_KEY to .env.local, or launch from the setup screen with keys entered."
+    )
     return
   }
 
