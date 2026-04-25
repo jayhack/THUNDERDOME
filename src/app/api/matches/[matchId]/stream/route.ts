@@ -1,4 +1,5 @@
 import { generateCodexMatchEvents } from "@/lib/codex-match-events"
+import { getRealArenaAgentId } from "@/lib/arena-data"
 import { generateLiveMatchEvents } from "@/lib/live-match-events"
 import { getCredentialSession } from "@/lib/match-credentials"
 import { encodeSse, generateMatchEvents, type ArenaStreamEvent } from "@/lib/match-events"
@@ -18,14 +19,17 @@ export async function GET(
   const mode = url.searchParams.get("mode")
   const credentialSessionId = url.searchParams.get("credentials")
   const credentials = getCredentialSession(credentialSessionId)
+  const isRealCodexMode = mode !== "mock" && mode !== "mapped"
+  const resolvedLeft = isRealCodexMode ? getRealArenaAgentId(left) : left
+  const resolvedRight = isRealCodexMode ? getRealArenaAgentId(right) : right
   const iterator =
     credentialSessionId && !credentials
       ? generateCredentialSessionErrorEvents()
       : mode === "mock"
-      ? generateMatchEvents(matchId, left, right, task)
+      ? generateMatchEvents(matchId, resolvedLeft, resolvedRight, task)
       : mode === "mapped"
-        ? generateLiveMatchEvents(matchId, left, right, task, credentials)
-        : generateCodexMatchEvents(matchId, left, right, task, credentials)
+        ? generateLiveMatchEvents(matchId, resolvedLeft, resolvedRight, task, credentials)
+        : generateCodexMatchEvents(matchId, resolvedLeft, resolvedRight, task, credentials)
 
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {

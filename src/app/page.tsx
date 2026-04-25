@@ -10,6 +10,7 @@ import {
   KeyRound,
   LoaderCircle,
   Swords,
+  UserRound,
   XCircle,
   Zap,
 } from "lucide-react"
@@ -24,14 +25,12 @@ import {
   SelectGroup,
   SelectItem,
   SelectLabel,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { ThunderdomeLogo } from "@/components/thunderdome-logo"
 import {
-  agents,
   defaultLeftAgent,
   defaultRightAgent,
   defaultTask,
@@ -39,6 +38,7 @@ import {
   getTask,
   isAgentId,
   isTaskId,
+  realArenaAgents,
   tasks,
   type AgentDefinition,
   type AgentId,
@@ -322,6 +322,26 @@ export default function Home() {
               </h1>
             </div>
           </div>
+          <nav className="flex items-center gap-2">
+            <a
+              href="https://github.com/jayhack/THUNDERDOME"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-sm border border-[#343a40] bg-[#050505]/80 px-3 text-sm font-medium text-foreground transition-colors hover:border-cyan-300/50 hover:bg-cyan-300/10"
+            >
+              <span className="font-mono text-base leading-none" aria-hidden="true">
+                GH
+              </span>
+              GitHub
+            </a>
+            <Link
+              href="/about"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-sm border border-[#343a40] bg-[#050505]/80 px-3 text-sm font-medium text-foreground transition-colors hover:border-cyan-300/50 hover:bg-cyan-300/10"
+            >
+              <UserRound data-icon="inline-start" />
+              About
+            </Link>
+          </nav>
         </header>
 
         <section className="mx-auto w-full max-w-6xl px-4 pb-4 sm:px-6 lg:px-8">
@@ -535,15 +555,7 @@ function AgentSelector({
         <SelectContent align="start">
           <SelectGroup>
             <SelectLabel>Agents</SelectLabel>
-            {agents.slice(0, 3).map((agent) => (
-              <SelectItem key={agent.id} value={agent.id}>
-                {agent.name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-          <SelectSeparator />
-          <SelectGroup>
-            {agents.slice(3).map((agent) => (
+            {realArenaAgents.map((agent) => (
               <SelectItem key={agent.id} value={agent.id}>
                 {agent.name}
               </SelectItem>

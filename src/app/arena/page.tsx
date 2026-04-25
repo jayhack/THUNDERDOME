@@ -4,6 +4,7 @@ import {
   defaultRightAgent,
   defaultTask,
   getAgent,
+  getRealArenaAgentId,
   getTask,
 } from "@/lib/arena-data"
 
@@ -19,12 +20,15 @@ export default async function ArenaPage({ searchParams }: ArenaPageProps) {
   const matchId = firstParam(params.match) ?? crypto.randomUUID()
   const mode = firstParam(params.mode)
   const credentialSession = firstParam(params.credentials)
+  const isRealCodexMode = mode !== "mock" && mode !== "mapped"
+  const resolvedLeftId = isRealCodexMode ? getRealArenaAgentId(leftId) : leftId
+  const resolvedRightId = isRealCodexMode ? getRealArenaAgentId(rightId) : rightId
 
   return (
     <ArenaClient
       matchId={matchId}
-      left={getAgent(leftId)}
-      right={getAgent(rightId)}
+      left={getAgent(resolvedLeftId)}
+      right={getAgent(resolvedRightId)}
       task={getTask(taskId)}
       mode={mode}
       credentialSession={credentialSession}
