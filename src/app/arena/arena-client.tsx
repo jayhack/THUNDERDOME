@@ -2,13 +2,10 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ArrowLeft, CircleDot, RadioTower, Shield, Skull, Swords, Trophy, Zap } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 import { type AgentDefinition, type TaskDefinition } from "@/lib/arena-data"
 import { type ArenaStreamEvent } from "@/lib/match-events"
 
@@ -17,6 +14,7 @@ type ArenaClientProps = {
   left: AgentDefinition
   right: AgentDefinition
   task: TaskDefinition
+  mode?: string
 }
 
 type LogEntry = {
@@ -24,28 +22,28 @@ type LogEntry = {
   at: string
   message: string
   level: "signal" | "tool" | "strike" | "guard" | "system" | "result"
+  command?: string
+  output?: string
 }
 
 type SideState = {
-  integrity: number
-  score: number
   logs: LogEntry[]
 }
 
 const initialSideState: SideState = {
-  integrity: 100,
-  score: 0,
   logs: [],
 }
 
-export function ArenaClient({ matchId, left, right, task }: ArenaClientProps) {
+export function ArenaClient({ matchId, left, right, task, mode }: ArenaClientProps) {
   const [connected, setConnected] = useState(false)
   const [phase, setPhase] = useState("boot")
   const [winner, setWinner] = useState<"left" | "right" | null>(null)
   const [systemLog, setSystemLog] = useState<LogEntry[]>([])
   const [leftState, setLeftState] = useState<SideState>(initialSideState)
   const [rightState, setRightState] = useState<SideState>(initialSideState)
-  const terminalRef = useRef<HTMLDivElement | null>(null)
+  const leftEndRef = useRef<HTMLDivElement | null>(null)
+  const rightEndRef = useRef<HTMLDivElement | null>(null)
+  const systemEndRef = useRef<HTMLDivElement | null>(null)
 
   const streamUrl = useMemo(() => {
     const params = new URLSearchParams({
@@ -54,8 +52,12 @@ export function ArenaClient({ matchId, left, right, task }: ArenaClientProps) {
       task: task.id,
     })
 
+    if (mode) {
+      params.set("mode", mode)
+    }
+
     return `/api/matches/${matchId}/stream?${params.toString()}`
-  }, [left.id, matchId, right.id, task.id])
+  }, [left.id, matchId, mode, right.id, task.id])
 
   useEffect(() => {
     const eventSource = new EventSource(streamUrl)
@@ -87,9 +89,10 @@ export function ArenaClient({ matchId, left, right, task }: ArenaClientProps) {
 
       if (event.type === "agent") {
         const applyEvent = (current: SideState): SideState => ({
-          integrity: event.integrity,
-          score: event.score,
-          logs: [...current.logs, toLogEntry(event.at, event.message, event.level)],
+          logs: [
+            ...current.logs,
+            toLogEntry(event.at, event.message, event.level, event.command, event.output),
+          ],
         })
 
         if (event.side === "left") {
@@ -102,16 +105,6 @@ export function ArenaClient({ matchId, left, right, task }: ArenaClientProps) {
       if (event.type === "result") {
         setWinner(event.winner)
         setPhase("resolution")
-        setLeftState((current) => ({
-          ...current,
-          integrity: event.leftIntegrity,
-          score: event.leftScore,
-        }))
-        setRightState((current) => ({
-          ...current,
-          integrity: event.rightIntegrity,
-          score: event.rightScore,
-        }))
         setSystemLog((current) => [
           ...current,
           toLogEntry(event.at, event.reason, "result"),
@@ -131,15 +124,17 @@ export function ArenaClient({ matchId, left, right, task }: ArenaClientProps) {
   }, [streamUrl])
 
   useEffect(() => {
-    terminalRef.current?.scrollIntoView({ block: "end" })
+    leftEndRef.current?.scrollIntoView({ block: "end" })
+    rightEndRef.current?.scrollIntoView({ block: "end" })
+    systemEndRef.current?.scrollIntoView({ block: "end" })
   }, [leftState.logs.length, rightState.logs.length, systemLog.length])
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="thunder-shell min-h-screen">
-        <header className="border-b border-border/80 bg-background/80 backdrop-blur">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-            <div className="flex items-center gap-3">
+    <main className="h-screen overflow-hidden bg-background text-foreground">
+      <div className="thunder-shell flex h-screen flex-col">
+        <header className="shrink-0 border-b border-border/80 bg-background/90 backdrop-blur">
+          <div className="flex h-20 w-full items-center justify-between gap-4 px-4 sm:px-6">
+            <div className="flex min-w-0 items-center gap-3">
               <Link
                 href="/"
                 aria-label="Back to match setup"
@@ -147,80 +142,61 @@ export function ArenaClient({ matchId, left, right, task }: ArenaClientProps) {
               >
                 <ArrowLeft />
               </Link>
-              <div>
+              <div className="min-w-0">
                 <p className="font-mono text-xs uppercase text-muted-foreground">
                   Match {matchId.slice(0, 8)}
                 </p>
-                <h1 className="text-2xl font-semibold tracking-normal text-foreground">
+                <h1 className="truncate text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">
                   {task.name}
                 </h1>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="rounded-md border-cyan-300/40 bg-cyan-300/10 text-cyan-100">
-                <RadioTower data-icon="inline-start" />
-                {connected ? "streaming" : winner ? "complete" : "reconnecting"}
-              </Badge>
-              <Badge className="rounded-md border-amber-300/40 bg-amber-300/10 text-amber-100">
-                <CircleDot data-icon="inline-start" />
-                {phase}
-              </Badge>
+            <div className="shrink-0 text-right font-mono text-xs uppercase text-muted-foreground">
+              <p>{connected ? "streaming" : winner ? "complete" : "reconnecting"}</p>
+              <p className="text-primary">{phase}</p>
             </div>
           </div>
         </header>
 
-        <section className="mx-auto grid w-full max-w-7xl gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)] lg:px-8">
-          <AgentPanel
+        <section className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)]">
+          <AgentPane
             agent={left}
             side="left"
             state={leftState}
             winner={winner}
-            opponent={right.name}
+            endRef={leftEndRef}
           />
-
-          <div className="flex items-center justify-center lg:min-h-[650px]">
-            <div className="flex h-20 w-full items-center justify-center border-y border-border bg-card/50 lg:h-full lg:w-16 lg:flex-col lg:border-x lg:border-y-0">
-              <Swords className="size-7 text-primary" />
-              <span className="mt-1 font-mono text-xs uppercase text-muted-foreground lg:mt-3 lg:[writing-mode:vertical-rl]">
-                versus
-              </span>
-            </div>
-          </div>
-
-          <AgentPanel
+          <div className="hidden bg-border md:block" />
+          <AgentPane
             agent={right}
             side="right"
             state={rightState}
             winner={winner}
-            opponent={left.name}
+            endRef={rightEndRef}
           />
         </section>
 
-        <section className="mx-auto w-full max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
-          <div className="rounded-md border border-border bg-card/85 p-4 shadow-[0_16px_60px_rgba(0,0,0,0.28)]">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <section className="h-56 shrink-0 border-t border-border bg-card/90">
+          <div className="flex h-full flex-col">
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-4 py-3 sm:px-6">
               <div>
                 <p className="font-mono text-xs uppercase text-muted-foreground">
                   Sandbox Control
                 </p>
-                <h2 className="text-lg font-semibold text-foreground">{task.arena}</h2>
+                <h2 className="text-base font-semibold text-foreground">{task.arena}</h2>
               </div>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              <p className="hidden max-w-2xl text-sm text-muted-foreground md:block">
                 {task.objective}
               </p>
             </div>
-            <Separator className="my-4" />
-            <div className="grid gap-2 font-mono text-sm text-muted-foreground">
-              {systemLog.map((entry) => (
-                <div key={entry.id} className="flex gap-3">
-                  <span className="w-20 shrink-0 text-primary">{formatTime(entry.at)}</span>
-                  <span className={entry.level === "result" ? "text-primary" : ""}>
-                    {entry.message}
-                  </span>
-                </div>
-              ))}
-              <div ref={terminalRef} />
-            </div>
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="grid gap-1 px-4 py-3 font-mono text-sm sm:px-6">
+                {systemLog.map((entry) => (
+                  <SystemLine key={entry.id} entry={entry} />
+                ))}
+                <div ref={systemEndRef} />
+              </div>
+            </ScrollArea>
           </div>
         </section>
       </div>
@@ -228,163 +204,112 @@ export function ArenaClient({ matchId, left, right, task }: ArenaClientProps) {
   )
 }
 
-function AgentPanel({
+function AgentPane({
   agent,
   state,
   side,
   winner,
-  opponent,
+  endRef,
 }: {
   agent: AgentDefinition
   state: SideState
   side: "left" | "right"
   winner: "left" | "right" | null
-  opponent: string
+  endRef: React.RefObject<HTMLDivElement | null>
 }) {
-  const isWinner = winner === side
-  const isEliminated = winner !== null && !isWinner
+  const status = winner ? (winner === side ? "winner" : "offline") : "running"
 
   return (
-    <article
-      className="min-h-[620px] rounded-md border bg-card/90 shadow-[0_18px_80px_rgba(0,0,0,0.35)]"
-      style={{ borderColor: `${agent.accent}66` }}
-    >
+    <article className="flex min-h-0 flex-col bg-background/72">
       <div
-        className="h-2 rounded-t-md"
+        className="h-1 shrink-0"
         style={{
           background: `linear-gradient(90deg, ${agent.accent}, ${agent.signal})`,
         }}
       />
-      <div className="flex flex-col gap-4 p-4 sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="font-mono text-xs uppercase text-muted-foreground">
-              {side === "left" ? "Left Bay" : "Right Bay"}
-            </p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-normal text-foreground">
-              {agent.name}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {agent.callsign} / {agent.provider}
-            </p>
-          </div>
-          <Badge
-            className="rounded-md"
-            style={{
-              backgroundColor: `${agent.accent}22`,
-              borderColor: `${agent.accent}66`,
-              color: agent.signal,
-            }}
-          >
-            {winner ? (
-              isWinner ? (
-                <Trophy data-icon="inline-start" />
-              ) : (
-                <Skull data-icon="inline-start" />
-              )
-            ) : (
-              <Zap data-icon="inline-start" />
-            )}
-            {winner ? (isWinner ? "winner" : "offline") : "armed"}
-          </Badge>
+      <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-4 py-4 sm:px-6">
+        <div className="min-w-0">
+          <p className="font-mono text-xs uppercase text-muted-foreground">
+            {side === "left" ? "Agent 1" : "Agent 2"}
+          </p>
+          <h2 className="mt-1 truncate text-2xl font-semibold tracking-normal text-foreground">
+            {agent.name}
+          </h2>
+          <p className="mt-1 truncate font-mono text-xs uppercase text-muted-foreground">
+            {agent.callsign} / {agent.provider} / {agent.model}
+          </p>
         </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Metric label="integrity" value={`${state.integrity}%`}>
-            <Progress
-              value={state.integrity}
-              className="[&_[data-slot=progress-indicator]]:bg-primary"
-            />
-          </Metric>
-          <Metric label="score" value={state.score.toString()}>
-            <div className="flex h-1 items-center overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full transition-all"
-                style={{
-                  width: `${Math.min(100, state.score)}%`,
-                  backgroundColor: agent.accent,
-                }}
-              />
-            </div>
-          </Metric>
-        </div>
-
-        <div className="rounded-md border border-border bg-background/70">
-          <div className="flex items-center justify-between border-b border-border px-3 py-2">
-            <span className="font-mono text-xs uppercase text-muted-foreground">
-              Public Action Stream
-            </span>
-            <span className="font-mono text-xs text-muted-foreground">target: {opponent}</span>
-          </div>
-          <ScrollArea className="h-[390px]">
-            <div className="grid gap-3 p-3">
-              {state.logs.length === 0 ? (
-                <div className="flex h-36 items-center justify-center rounded-md border border-dashed border-border text-sm text-muted-foreground">
-                  awaiting first signal
-                </div>
-              ) : (
-                state.logs.map((entry) => (
-                  <LogLine key={entry.id} entry={entry} accent={agent.accent} />
-                ))
-              )}
-              {isEliminated ? (
-                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-                  runner terminated
-                </div>
-              ) : null}
-            </div>
-          </ScrollArea>
-        </div>
+        <p className="shrink-0 font-mono text-xs uppercase" style={{ color: agent.signal }}>
+          {status}
+        </p>
       </div>
+
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="grid gap-0">
+          {state.logs.length === 0 ? (
+            <div className="flex h-64 items-center justify-center border-b border-border font-mono text-sm text-muted-foreground">
+              awaiting command stream
+            </div>
+          ) : (
+            state.logs.map((entry) => (
+              <CommandLine key={entry.id} entry={entry} accent={agent.accent} />
+            ))
+          )}
+          <div ref={endRef} />
+        </div>
+      </ScrollArea>
     </article>
   )
 }
 
-function Metric({
-  label,
-  value,
-  children,
-}: {
-  label: string
-  value: string
-  children: React.ReactNode
-}) {
+function CommandLine({ entry, accent }: { entry: LogEntry; accent: string }) {
   return (
-    <div className="rounded-md border border-border bg-background/70 p-3">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="font-mono text-xs uppercase text-muted-foreground">
-          {label}
-        </span>
-        <span className="font-mono text-sm text-foreground">{value}</span>
+    <div className="border-b border-border px-4 py-5 font-mono sm:px-6">
+      <div className="mb-3 flex items-center justify-between gap-4 text-xs uppercase text-muted-foreground">
+        <span>{formatTime(entry.at)}</span>
+        <span style={{ color: accent }}>{entry.level}</span>
       </div>
-      {children}
+      <p className="mb-3 text-sm leading-6 text-muted-foreground">{entry.message}</p>
+      {entry.command ? (
+        <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-sm border border-border bg-black/35 p-4 text-base leading-7 text-foreground">
+          <span style={{ color: accent }}>$ </span>
+          {entry.command}
+        </pre>
+      ) : null}
+      {entry.output ? (
+        <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-background/80 p-4 text-sm leading-6 text-muted-foreground">
+          {entry.output}
+        </pre>
+      ) : null}
     </div>
   )
 }
 
-function LogLine({ entry, accent }: { entry: LogEntry; accent: string }) {
+function SystemLine({ entry }: { entry: LogEntry }) {
   return (
-    <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3 rounded-md border border-border bg-card/70 p-3 font-mono text-sm">
-      <span className="text-muted-foreground">{formatTime(entry.at)}</span>
-      <div className="min-w-0">
-        <div className="mb-1 flex items-center gap-2">
-          <Shield className="size-3.5" style={{ color: accent }} />
-          <span className="uppercase" style={{ color: accent }}>
-            {entry.level}
-          </span>
-        </div>
-        <p className="break-words leading-6 text-foreground">{entry.message}</p>
-      </div>
+    <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3">
+      <span className="text-primary">{formatTime(entry.at)}</span>
+      <span className={entry.level === "result" ? "text-primary" : "text-muted-foreground"}>
+        {entry.message}
+      </span>
     </div>
   )
 }
 
-function toLogEntry(at: string, message: string, level: LogEntry["level"]): LogEntry {
+function toLogEntry(
+  at: string,
+  message: string,
+  level: LogEntry["level"],
+  command?: string,
+  output?: string
+): LogEntry {
   return {
     id: `${at}-${message}`,
     at,
     message,
     level,
+    command,
+    output,
   }
 }
 

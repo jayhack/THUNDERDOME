@@ -1,3 +1,4 @@
+import { generateCodexMatchEvents } from "@/lib/codex-match-events"
 import { generateLiveMatchEvents } from "@/lib/live-match-events"
 import { encodeSse, generateMatchEvents } from "@/lib/match-events"
 
@@ -17,7 +18,9 @@ export async function GET(
   const iterator =
     mode === "mock"
       ? generateMatchEvents(matchId, left, right, task)
-      : generateLiveMatchEvents(matchId, left, right, task)
+      : mode === "mapped"
+        ? generateLiveMatchEvents(matchId, left, right, task)
+        : generateCodexMatchEvents(matchId, left, right, task)
 
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {

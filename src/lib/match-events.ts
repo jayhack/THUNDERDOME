@@ -19,6 +19,8 @@ export type ArenaStreamEvent =
       side: Exclude<StreamSide, "system">
       level: "signal" | "tool" | "strike" | "guard"
       message: string
+      command?: string
+      output?: string
       at: string
       integrity: number
       score: number
