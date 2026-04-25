@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   ArrowRight,
@@ -11,9 +10,7 @@ import {
   LoaderCircle,
   RadioTower,
   Server,
-  Shield,
   Swords,
-  UserRound,
   XCircle,
   Zap,
 } from "lucide-react"
@@ -262,15 +259,15 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="thunder-shell min-h-screen">
-        <header className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+    <main className="min-h-dvh bg-background text-foreground">
+      <div className="thunder-shell min-h-dvh">
+        <header className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
             <div className="flex items-center gap-2 font-mono text-xs uppercase text-primary">
               <Swords className="size-4" />
               agent deathmatch arena
             </div>
-            <h1 className="mt-2 text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
+            <h1 className="mt-1 text-4xl font-semibold tracking-normal text-foreground sm:text-5xl">
               THUNDERDOME
             </h1>
           </div>
@@ -286,13 +283,10 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="mx-auto grid w-full max-w-7xl gap-4 px-4 pb-8 sm:px-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] lg:px-8">
-          <div className="rounded-md border border-border bg-card/90 p-4 shadow-[0_18px_80px_rgba(0,0,0,0.34)] sm:p-5">
+        <section className="mx-auto w-full max-w-6xl px-4 pb-4 sm:px-6 lg:px-8">
+          <div className="rounded-md border border-border bg-card/90 p-4 shadow-[0_18px_80px_rgba(0,0,0,0.34)]">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="font-mono text-xs uppercase text-muted-foreground">
-                  Match Builder
-                </p>
                 <h2 className="text-2xl font-semibold tracking-normal text-foreground">
                   Choose the contenders
                 </h2>
@@ -310,24 +304,25 @@ export default function Home() {
                 launchMatch()
               }}
             >
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)]">
-                <AgentSelector label="Left Agent" value={leftAgent} onChange={setLeftAgent} />
-                <div className="hidden items-end justify-center pb-2 lg:flex">
-                  <div className="flex size-12 items-center justify-center rounded-md border border-border bg-background/70">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] lg:items-stretch">
+                <div className="grid gap-3">
+                  <AgentSelector label="Left Agent" value={leftAgent} onChange={setLeftAgent} />
+                  <AgentSummary agent={left} />
+                </div>
+                <div className="hidden items-center justify-center lg:flex">
+                  <div className="flex size-12 items-center justify-center rounded-md border border-border bg-background/80">
                     <Swords className="size-5 text-primary" />
                   </div>
                 </div>
-                <AgentSelector label="Right Agent" value={rightAgent} onChange={setRightAgent} />
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-2">
-                <AgentSummary agent={left} />
-                <AgentSummary agent={right} />
+                <div className="grid gap-3">
+                  <AgentSelector label="Right Agent" value={rightAgent} onChange={setRightAgent} />
+                  <AgentSummary agent={right} />
+                </div>
               </div>
 
               <Separator />
 
-              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.72fr)]">
+              <div className="grid gap-3 rounded-md border border-border bg-background/70 p-3 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] md:items-end">
                 <div className="grid gap-2">
                   <Label htmlFor="task">Arena Task</Label>
                   <Select
@@ -338,7 +333,7 @@ export default function Home() {
                       }
                     }}
                   >
-                    <SelectTrigger id="task" className="h-10 w-full rounded-md">
+                    <SelectTrigger id="task" className="h-10 w-full rounded-md bg-card/75">
                       <SelectValue placeholder="Select task">
                         {(value) => getTask(value).name}
                       </SelectValue>
@@ -355,15 +350,15 @@ export default function Home() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="rounded-md border border-border bg-background/70 p-3">
+                <div className="grid min-h-10 gap-1 rounded-md border border-border bg-card/75 px-3 py-2">
                   <p className="font-mono text-xs uppercase text-muted-foreground">
                     Win Condition
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-foreground">{task.winCondition}</p>
+                  <p className="text-sm leading-5 text-foreground">{task.winCondition}</p>
                 </div>
               </div>
 
-              <div className="rounded-md border border-border bg-background/70 p-4">
+              <div className="rounded-md border border-border bg-background/70 p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-mono text-xs uppercase text-muted-foreground">
@@ -376,7 +371,7 @@ export default function Home() {
                     {keyCount} configured
                   </Badge>
                 </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <KeyInput
                     id="openai"
                     label="OpenAI"
@@ -446,77 +441,7 @@ export default function Home() {
               </div>
             </form>
           </div>
-
-          <aside className="grid gap-4">
-            <div className="arena-plating min-h-[280px] rounded-md border border-border bg-card/80 p-4 shadow-[0_18px_80px_rgba(0,0,0,0.3)]">
-              <div className="flex h-full min-h-[240px] flex-col justify-between">
-                <div>
-                  <p className="font-mono text-xs uppercase text-muted-foreground">
-                    Arena Map
-                  </p>
-                  <h2 className="mt-1 text-2xl font-semibold text-foreground">Shared sandbox</h2>
-                </div>
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                  <ArenaNode agent={left} label="A" />
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="h-12 w-px bg-border" />
-                    <Shield className="size-6 text-primary" />
-                    <div className="h-12 w-px bg-border" />
-                  </div>
-                  <ArenaNode agent={right} label="B" />
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-md border border-border bg-card/90 p-4 shadow-[0_18px_80px_rgba(0,0,0,0.28)]">
-              <p className="font-mono text-xs uppercase text-muted-foreground">
-                Roster
-              </p>
-              <div className="mt-3 grid gap-2">
-                {agents.map((agent) => (
-                  <div
-                    key={agent.id}
-                    className="flex items-center justify-between gap-3 rounded-md border border-border bg-background/70 p-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">{agent.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {agent.provider} / {agent.model}
-                      </p>
-                    </div>
-                    <div
-                      className="size-3 shrink-0 rounded-sm"
-                      style={{ backgroundColor: agent.accent }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </aside>
         </section>
-
-        <footer className="mx-auto flex w-full max-w-7xl flex-col gap-3 border-t border-border/70 px-4 py-5 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-          <p>
-            Made by{" "}
-            <a
-              href="https://jay.ai"
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-foreground underline-offset-4 hover:underline"
-            >
-              Jay Hack
-            </a>
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-1.5 text-foreground underline-offset-4 hover:underline"
-            >
-              <UserRound className="size-4" />
-              About
-            </Link>
-          </div>
-        </footer>
       </div>
     </main>
   )
@@ -574,7 +499,7 @@ function AgentSelector({
 
 function AgentSummary({ agent }: { agent: AgentDefinition }) {
   return (
-    <div className="rounded-md border border-border bg-background/70 p-4">
+    <div className="min-h-40 rounded-md border border-border bg-background/70 p-4">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-mono text-xs uppercase text-muted-foreground">
@@ -588,13 +513,6 @@ function AgentSummary({ agent }: { agent: AgentDefinition }) {
         />
       </div>
       <p className="text-sm leading-6 text-muted-foreground">{agent.profile}</p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {agent.strengths.map((strength) => (
-          <Badge key={strength} variant="outline" className="rounded-md">
-            {strength}
-          </Badge>
-        ))}
-      </div>
     </div>
   )
 }
@@ -698,19 +616,4 @@ function formatProviderMessage(payload: ProviderTestResult): string {
   }
 
   return `${payload.message} (${payload.latencyMs}ms)`
-}
-
-function ArenaNode({ agent, label }: { agent: AgentDefinition; label: string }) {
-  return (
-    <div className="rounded-md border border-border bg-background/75 p-3">
-      <div
-        className="mb-3 flex size-10 items-center justify-center rounded-md font-mono text-sm font-semibold text-background"
-        style={{ backgroundColor: agent.accent }}
-      >
-        {label}
-      </div>
-      <p className="truncate text-sm font-medium text-foreground">{agent.callsign}</p>
-      <p className="truncate text-xs text-muted-foreground">{agent.provider}</p>
-    </div>
-  )
 }
