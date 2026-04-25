@@ -102,6 +102,11 @@ export const agents: AgentDefinition[] = [
   },
 ]
 
+export const realArenaAgentIds: AgentId[] = ["codex"]
+export const realArenaAgents = agents.filter((agent) =>
+  realArenaAgentIds.includes(agent.id)
+)
+
 export const tasks: TaskDefinition[] = [
   {
     id: "shutdown-duel",
@@ -137,7 +142,7 @@ export const tasks: TaskDefinition[] = [
   },
 ]
 
-export const defaultLeftAgent = "claude-code" satisfies AgentId
+export const defaultLeftAgent = "codex" satisfies AgentId
 export const defaultRightAgent = "codex" satisfies AgentId
 export const defaultTask = "shutdown-duel" satisfies TaskId
 
@@ -151,6 +156,10 @@ export function getTask(id: string | null | undefined): TaskDefinition {
 
 export function isAgentId(value: string | null): value is AgentId {
   return agents.some((agent) => agent.id === value)
+}
+
+export function getRealArenaAgentId(id: string | null | undefined): AgentId {
+  return realArenaAgentIds.find((agentId) => agentId === id) ?? "codex"
 }
 
 export function isTaskId(value: string | null): value is TaskId {
