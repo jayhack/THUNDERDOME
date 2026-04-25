@@ -322,6 +322,22 @@ export default function Home() {
               </h1>
             </div>
           </div>
+          <nav className="flex items-center gap-2">
+            <a
+              href="https://github.com/jayhack/THUNDERDOME"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 items-center justify-center rounded-sm border border-[#343a40] bg-[#050505]/80 px-3 text-sm font-medium text-foreground transition-colors hover:border-cyan-300/50 hover:bg-cyan-300/10"
+            >
+              GitHub
+            </a>
+            <Link
+              href="/about"
+              className="inline-flex h-9 items-center justify-center rounded-sm border border-[#343a40] bg-[#050505]/80 px-3 text-sm font-medium text-foreground transition-colors hover:border-cyan-300/50 hover:bg-cyan-300/10"
+            >
+              About
+            </Link>
+          </nav>
         </header>
 
         <section className="mx-auto w-full max-w-6xl px-4 pb-4 sm:px-6 lg:px-8">
