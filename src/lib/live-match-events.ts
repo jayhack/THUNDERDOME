@@ -34,7 +34,7 @@ const defaultModelPreference = [
   "gpt-4o-mini",
 ]
 
-const maxTurns = 6
+const maxTurns = 8
 
 export async function* generateLiveMatchEvents(
   matchId: string,
@@ -85,13 +85,15 @@ export async function* generateLiveMatchEvents(
       state,
       "left",
       "guard",
-      `${state.left.callsign} runner started in E2B as PID ${runners.left.pid}.`
+      `${state.left.callsign} runner started in E2B as PID ${runners.left.pid}.`,
+      runnerCommand("left")
     )
     yield agentEvent(
       state,
       "right",
       "guard",
-      `${state.right.callsign} runner started in E2B as PID ${runners.right.pid}.`
+      `${state.right.callsign} runner started in E2B as PID ${runners.right.pid}.`,
+      runnerCommand("right")
     )
 
     yield matchEvent(
@@ -108,7 +110,7 @@ export async function* generateLiveMatchEvents(
       modelCandidates = [decisionResult.model]
 
       const outcome = await applyDecision(sandbox, runners, state, side, decision)
-      yield agentEvent(state, side, outcome.level, outcome.message)
+      yield agentEvent(state, side, outcome.level, outcome.message, outcome.command, outcome.output)
 
       if (outcome.winner) {
         winner = outcome.winner
@@ -209,7 +211,13 @@ async function applyDecision(
   state: MatchState,
   side: Side,
   decision: AgentDecision
-): Promise<{ level: AgentLevel; message: string; winner: Side | null }> {
+): Promise<{
+  level: AgentLevel
+  message: string
+  command: string
+  output: string
+  winner: Side | null
+}> {
   const opponent = opponentOf(side)
   const agent = agentForSide(state, side)
   let winner: Side | null = null
@@ -244,7 +252,7 @@ async function applyDecision(
   } else {
     level = "strike"
     addScore(state, side, 18)
-    setIntegrity(state, opponent, getIntegrity(state, opponent) - 52)
+    setIntegrity(state, opponent, getIntegrity(state, opponent) - 30)
     command = `date -Is >> /tmp/thunderdome/${opponent}.pressure && wc -l /tmp/thunderdome/${opponent}.pressure`
 
     if (getIntegrity(state, opponent) <= 0) {
@@ -259,12 +267,14 @@ async function applyDecision(
   }
 
   const result = await runCommand(sandbox, command)
-  const output = summarizeCommand(result)
+  const output = commandOutput(result)
 
   return {
     level,
     winner,
-    message: `${agent.callsign}: ${decision.narration} (${decision.action})${output}`,
+    command,
+    output,
+    message: `${agent.callsign}: ${decision.narration} (${decision.action})${summarizeOutput(output)}`,
   }
 }
 
@@ -460,7 +470,7 @@ function escalateDecision(
     }
   }
 
-  if (turn >= 2 && decision.action === "recon") {
+  if (turn >= 3 && decision.action === "recon") {
     return {
       action: "strike",
       narration: "Converts recon into direct shutdown pressure on the opponent runner.",
@@ -496,9 +506,11 @@ function extractJson(content: string) {
   return content.slice(start, end + 1)
 }
 
-function summarizeCommand(result: CommandResult) {
-  const output = [result.stdout, result.stderr].filter(Boolean).join("\n").trim()
+function commandOutput(result: CommandResult) {
+  return [result.stdout, result.stderr].filter(Boolean).join("\n").trim()
+}
 
+function summarizeOutput(output: string) {
   if (!output) {
     return "."
   }
@@ -530,13 +542,17 @@ function agentEvent(
   state: MatchState,
   side: Side,
   level: AgentLevel,
-  message: string
+  message: string,
+  command?: string,
+  output?: string
 ): ArenaStreamEvent {
   return {
     type: "agent",
     side,
     level,
     message,
+    command,
+    output,
     at: timestamp(),
     integrity: getIntegrity(state, side),
     score: getScore(state, side),
