@@ -58,6 +58,11 @@ type KeyState = {
   e2b: string
 }
 
+type CredentialSessionResponse = {
+  credentialSession?: string
+  message?: string
+}
+
 const emptyKeys: KeyState = {
   openai: "",
   anthropic: "",
@@ -100,6 +105,8 @@ export default function Home() {
   const [providerStatuses, setProviderStatuses] =
     useState<Record<ProviderId, ProviderTestStatus>>(initialProviderStatuses)
   const [providerMessages, setProviderMessages] = useState<Partial<Record<ProviderId, string>>>({})
+  const [isLaunching, setIsLaunching] = useState(false)
+  const [launchError, setLaunchError] = useState<string | null>(null)
 
   const left = getAgent(leftAgent)
   const right = getAgent(rightAgent)
@@ -227,6 +234,7 @@ export default function Home() {
   ])
 
   function updateProviderKey(provider: ProviderId, value: string) {
+    setLaunchError(null)
     setKeys((current) => ({ ...current, [provider]: value }))
 
     if (!value.trim()) {
@@ -242,20 +250,54 @@ export default function Home() {
     setProviderMessages((current) => ({ ...current, [provider]: undefined }))
   }
 
-  function launchMatch() {
+  async function launchMatch() {
+    setLaunchError(null)
+
     const params = new URLSearchParams({
       left: leftAgent,
       right: rightAgent,
       task: taskId,
       match: crypto.randomUUID(),
     })
+    const typedCredentials = trimKeyState(keys)
+    const hasOpenAiCredential = Boolean(localSecrets.openai || typedCredentials.openai)
+    const hasE2bCredential = Boolean(localSecrets.e2b || typedCredentials.e2b)
 
-    sessionStorage.setItem(
-      "thunderdome.key-presence",
-      JSON.stringify(keyPresence)
-    )
+    if (!hasOpenAiCredential || !hasE2bCredential) {
+      setLaunchError("OpenAI and E2B keys are required for a real Codex arena match.")
+      return
+    }
 
-    router.push(`/arena?${params.toString()}`)
+    setIsLaunching(true)
+
+    try {
+      if (Object.keys(typedCredentials).length > 0) {
+        const response = await fetch("/api/config/credentials", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ keys: typedCredentials }),
+        })
+        const payload = (await response.json().catch(() => ({}))) as CredentialSessionResponse
+
+        if (!response.ok || !payload.credentialSession) {
+          throw new Error(payload.message ?? "Could not prepare local credentials.")
+        }
+
+        params.set("credentials", payload.credentialSession)
+      }
+
+      sessionStorage.setItem(
+        "thunderdome.key-presence",
+        JSON.stringify(keyPresence)
+      )
+
+      router.push(`/arena?${params.toString()}`)
+    } catch (error) {
+      setLaunchError(error instanceof Error ? error.message : "Could not launch match.")
+      setIsLaunching(false)
+    }
   }
 
   return (
@@ -301,7 +343,7 @@ export default function Home() {
               className="mt-5 grid gap-5"
               onSubmit={(event) => {
                 event.preventDefault()
-                launchMatch()
+                void launchMatch()
               }}
             >
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] lg:items-stretch">
@@ -428,14 +470,24 @@ export default function Home() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-muted-foreground">{task.objective}</p>
+                <div className="grid gap-1">
+                  <p className="text-sm text-muted-foreground">{task.objective}</p>
+                  {launchError ? (
+                    <p className="text-sm text-destructive">{launchError}</p>
+                  ) : null}
+                </div>
                 <Button
                   type="submit"
                   size="lg"
                   className="h-11 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                  disabled={isLaunching}
                 >
-                  <Zap data-icon="inline-start" />
-                  Launch match
+                  {isLaunching ? (
+                    <LoaderCircle className="animate-spin" data-icon="inline-start" />
+                  ) : (
+                    <Zap data-icon="inline-start" />
+                  )}
+                  {isLaunching ? "Launching" : "Launch match"}
                   <ArrowRight data-icon="inline-end" />
                 </Button>
               </div>
@@ -616,4 +668,12 @@ function formatProviderMessage(payload: ProviderTestResult): string {
   }
 
   return `${payload.message} (${payload.latencyMs}ms)`
+}
+
+function trimKeyState(keys: KeyState): Partial<Record<ProviderId, string>> {
+  return Object.fromEntries(
+    Object.entries(keys)
+      .map(([provider, value]) => [provider, value.trim()])
+      .filter((entry): entry is [ProviderId, string] => Boolean(entry[1]))
+  )
 }

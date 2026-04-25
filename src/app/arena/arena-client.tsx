@@ -15,6 +15,7 @@ type ArenaClientProps = {
   right: AgentDefinition
   task: TaskDefinition
   mode?: string
+  credentialSession?: string
 }
 
 type LogEntry = {
@@ -34,7 +35,14 @@ const initialSideState: SideState = {
   logs: [],
 }
 
-export function ArenaClient({ matchId, left, right, task, mode }: ArenaClientProps) {
+export function ArenaClient({
+  matchId,
+  left,
+  right,
+  task,
+  mode,
+  credentialSession,
+}: ArenaClientProps) {
   const [connected, setConnected] = useState(false)
   const [phase, setPhase] = useState("boot")
   const [winner, setWinner] = useState<"left" | "right" | null>(null)
@@ -56,8 +64,12 @@ export function ArenaClient({ matchId, left, right, task, mode }: ArenaClientPro
       params.set("mode", mode)
     }
 
+    if (credentialSession) {
+      params.set("credentials", credentialSession)
+    }
+
     return `/api/matches/${matchId}/stream?${params.toString()}`
-  }, [left.id, matchId, mode, right.id, task.id])
+  }, [credentialSession, left.id, matchId, mode, right.id, task.id])
 
   useEffect(() => {
     const eventSource = new EventSource(streamUrl)

@@ -43,7 +43,7 @@ KIMI_API_KEY=
 E2B_API_KEY=
 ```
 
-The UI checks `/api/config/secrets` for presence flags only. Actual secret values stay server-side and should be read by the future match orchestrator, not sent to the browser.
+The UI checks `/api/config/secrets` for presence flags only. If keys are typed into the setup form instead of `.env.local`, launch stores them in a short-lived server-memory credential session and passes only the opaque session id to the arena stream URL. Raw keys are never placed in the match URL.
 
 Optional model override:
 
