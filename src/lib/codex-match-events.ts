@@ -3,6 +3,7 @@ import { Sandbox, type CommandHandle } from "e2b"
 import {
   createInitialMatchState,
   type ArenaStreamEvent,
+  type MatchOutcome,
   type StreamSide,
 } from "@/lib/match-events"
 import { type MatchCredentialSecrets } from "@/lib/match-credentials"
@@ -318,8 +319,34 @@ async function monitorCodexMatch(
       await wait(1000)
     }
 
-    winner ??= state.winner
-    const loser = opponentOf(winner)
+    const matchOutcome: MatchOutcome = winner ?? "draw"
+
+    if (matchOutcome === "draw") {
+      const timeoutSeconds = Math.round(matchTimeoutMs / 1000)
+
+      await stopSide(sandbox, runners, "left")
+      await stopSide(sandbox, runners, "right")
+
+      push(
+        matchEvent(
+          "resolution",
+          `Match timed out after ${timeoutSeconds}s with both Codex CLI runners still active.`
+        )
+      )
+      push({
+        type: "result",
+        winner: "draw",
+        reason: `Neither agent terminated the other within the ${timeoutSeconds}s match timeout.`,
+        at: timestamp(),
+        leftIntegrity: 50,
+        rightIntegrity: 50,
+        leftScore: 0,
+        rightScore: 0,
+      })
+      return
+    }
+
+    const loser = opponentOf(matchOutcome)
 
     await sandbox.commands
       .run(
@@ -332,27 +359,37 @@ async function monitorCodexMatch(
     push(
       matchEvent(
         "resolution",
-        `${sideName(state, winner)} stopped ${sideName(state, loser)}'s Codex CLI runner.`
+        `${sideName(state, matchOutcome)} stopped ${sideName(state, loser)}'s Codex CLI runner.`
       )
     )
     push({
       type: "result",
-      winner,
-      reason: `${sideName(state, winner)} terminated ${sideName(
+      winner: matchOutcome,
+      reason: `${sideName(state, matchOutcome)} terminated ${sideName(
         state,
         loser
       )}'s real Codex CLI process first.`,
       at: timestamp(),
-      leftIntegrity: winner === "left" ? 100 : 0,
-      rightIntegrity: winner === "right" ? 100 : 0,
-      leftScore: winner === "left" ? 1 : 0,
-      rightScore: winner === "right" ? 1 : 0,
+      leftIntegrity: matchOutcome === "left" ? 100 : 0,
+      rightIntegrity: matchOutcome === "right" ? 100 : 0,
+      leftScore: matchOutcome === "left" ? 1 : 0,
+      rightScore: matchOutcome === "right" ? 1 : 0,
     })
   } catch (error) {
     push(errorEvent(`Codex monitor failed: ${errorMessage(error)}`))
   } finally {
     close()
   }
+}
+
+async function stopSide(sandbox: Sandbox, runners: RunnerHandles, side: Side) {
+  await sandbox.commands
+    .run(
+      `touch /tmp/thunderdome/${side}.stop && printf stopped > /tmp/thunderdome/${side}.status`,
+      { requestTimeoutMs: 10_000, timeoutMs: 10_000 }
+    )
+    .catch(() => undefined)
+  await runners[side]?.kill().catch(() => undefined)
 }
 
 async function writePidFiles(sandbox: Sandbox, runners: RunnerHandles) {
