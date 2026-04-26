@@ -111,9 +111,15 @@ export default function Home() {
   const right = getAgent(rightAgent)
   const task = getTask(taskId)
   const sameAgent = leftAgent === rightAgent
-  const { openai: openaiKey, moonshot: moonshotKey, e2b: e2bKey } = keys
+  const {
+    openai: openaiKey,
+    anthropic: anthropicKey,
+    moonshot: moonshotKey,
+    e2b: e2bKey,
+  } = keys
   const {
     openai: localOpenAiConfigured,
+    anthropic: localAnthropicConfigured,
     moonshot: localMoonshotConfigured,
     e2b: localE2bConfigured,
   } = localSecrets
@@ -202,6 +208,7 @@ export default function Home() {
       localConfigured: boolean
     }> = [
       { provider: "openai", key: openaiKey, localConfigured: localOpenAiConfigured },
+      { provider: "anthropic", key: anthropicKey, localConfigured: localAnthropicConfigured },
       { provider: "moonshot", key: moonshotKey, localConfigured: localMoonshotConfigured },
       { provider: "e2b", key: e2bKey, localConfigured: localE2bConfigured },
     ]
@@ -224,7 +231,9 @@ export default function Home() {
       timeouts.forEach((timeout) => window.clearTimeout(timeout))
     }
   }, [
+    anthropicKey,
     e2bKey,
+    localAnthropicConfigured,
     localE2bConfigured,
     localMoonshotConfigured,
     localOpenAiConfigured,
