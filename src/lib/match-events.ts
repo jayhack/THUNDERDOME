@@ -1,6 +1,7 @@
 import { getAgent, getTask, type AgentDefinition, type TaskDefinition } from "@/lib/arena-data"
 
 export type StreamSide = "left" | "right" | "system"
+export type MatchOutcome = Exclude<StreamSide, "system"> | "draw"
 
 export type ArenaStreamEvent =
   | {
@@ -27,7 +28,7 @@ export type ArenaStreamEvent =
     }
   | {
       type: "result"
-      winner: Exclude<StreamSide, "system">
+      winner: MatchOutcome
       reason: string
       at: string
       leftIntegrity: number

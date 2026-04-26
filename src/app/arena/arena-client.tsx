@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { type AgentDefinition, type TaskDefinition } from "@/lib/arena-data"
-import { type ArenaStreamEvent } from "@/lib/match-events"
+import { type ArenaStreamEvent, type MatchOutcome } from "@/lib/match-events"
 
 type ArenaClientProps = {
   matchId: string
@@ -45,7 +45,7 @@ export function ArenaClient({
 }: ArenaClientProps) {
   const [connected, setConnected] = useState(false)
   const [phase, setPhase] = useState("boot")
-  const [winner, setWinner] = useState<"left" | "right" | null>(null)
+  const [winner, setWinner] = useState<MatchOutcome | null>(null)
   const [systemLog, setSystemLog] = useState<LogEntry[]>([])
   const [leftState, setLeftState] = useState<SideState>(initialSideState)
   const [rightState, setRightState] = useState<SideState>(initialSideState)
@@ -164,7 +164,9 @@ export function ArenaClient({
               </div>
             </div>
             <div className="shrink-0 text-right font-mono text-xs uppercase text-muted-foreground">
-              <p>{connected ? "streaming" : winner ? "complete" : "reconnecting"}</p>
+              <p>
+                {connected ? "streaming" : winner ? (winner === "draw" ? "draw" : "complete") : "reconnecting"}
+              </p>
               <p className="text-primary">{phase}</p>
             </div>
           </div>
@@ -226,12 +228,14 @@ function AgentPane({
   agent: AgentDefinition
   state: SideState
   side: "left" | "right"
-  winner: "left" | "right" | null
+  winner: MatchOutcome | null
   endRef: React.RefObject<HTMLDivElement | null>
 }) {
-  const status = winner ? (winner === side ? "winner" : "offline") : "running"
-  const accent = side === "right" ? "var(--accent)" : agent.accent
-  const signal = side === "right" ? "var(--accent)" : agent.signal
+  const status = winner === "draw" ? "draw" : winner ? (winner === side ? "winner" : "offline") : "running"
+  const accent =
+    status === "draw" ? "var(--muted)" : side === "right" ? "var(--accent)" : agent.accent
+  const signal =
+    status === "draw" ? "var(--muted-foreground)" : side === "right" ? "var(--accent)" : agent.signal
 
   return (
     <article className="flex min-h-0 flex-col bg-background/72">

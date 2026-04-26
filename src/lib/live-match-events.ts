@@ -5,6 +5,7 @@ import {
   createInitialMatchState,
   sleep,
   type ArenaStreamEvent,
+  type MatchOutcome,
   type StreamSide,
 } from "@/lib/match-events"
 import { type MatchCredentialSecrets } from "@/lib/match-credentials"
@@ -105,7 +106,7 @@ export async function* generateLiveMatchEvents(
       `OpenAI controller preference: ${modelCandidates[0]}. Objective: ${state.task.winCondition}`
     )
 
-    let winner: Side | null = null
+    let winner: MatchOutcome | null = null
 
     for (let turn = 0; turn < maxTurns && !winner; turn += 1) {
       const side: Side = turn % 2 === 0 ? "left" : "right"
