@@ -24,13 +24,6 @@ export async function POST(request: Request) {
     return Response.json(result("e2b", "unsupported", "Unknown provider."), { status: 400 })
   }
 
-  if (provider === "anthropic") {
-    return Response.json(
-      result(provider, "unsupported", "Anthropic validation is not implemented yet."),
-      { status: 400 }
-    )
-  }
-
   const apiKey = body.key?.trim() || getProviderKey(provider)
 
   if (!apiKey) {
@@ -60,11 +53,15 @@ export async function POST(request: Request) {
 }
 
 async function testProviderKey(
-  provider: Exclude<ProviderId, "anthropic">,
+  provider: ProviderId,
   apiKey: string
 ): Promise<{ message: string }> {
   if (provider === "openai") {
     return testOpenAiKey(apiKey)
+  }
+
+  if (provider === "anthropic") {
+    return testAnthropicKey(apiKey)
   }
 
   if (provider === "moonshot") {
@@ -106,6 +103,45 @@ async function testMoonshotKey(apiKey: string): Promise<{ message: string }> {
   await assertProviderResponse("Kimi", response)
 
   return { message: "Kimi key works. Test completion succeeded." }
+}
+
+async function testAnthropicKey(apiKey: string): Promise<{ message: string }> {
+  const response = await fetch("https://api.anthropic.com/v1/models?limit=1", {
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+  })
+
+  if (response.status === 404) {
+    return testAnthropicKeyViaMessages(apiKey)
+  }
+
+  await assertProviderResponse("Anthropic", response)
+  const payload = (await response.json()) as { data?: unknown[] }
+  const modelCount = Array.isArray(payload.data) ? payload.data.length : 0
+
+  return { message: `Anthropic key works. ${modelCount}+ models visible.` }
+}
+
+async function testAnthropicKeyViaMessages(apiKey: string): Promise<{ message: string }> {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 1,
+      messages: [{ role: "user", content: "ping" }],
+    }),
+  })
+
+  await assertProviderResponse("Anthropic", response)
+
+  return { message: "Anthropic key works. Test message succeeded." }
 }
 
 async function testE2bKey(apiKey: string): Promise<{ message: string }> {
@@ -221,6 +257,10 @@ function getProviderKey(provider: ProviderId): string | undefined {
 
   if (provider === "e2b") {
     return getSecretValue("E2B_API_KEY")
+  }
+
+  if (provider === "anthropic") {
+    return getSecretValue("ANTHROPIC_API_KEY")
   }
 
   return undefined
