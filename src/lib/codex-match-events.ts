@@ -237,7 +237,9 @@ function startCodexSide(
     onStdout: handleStdout,
     onStderr: handleStderr,
     requestTimeoutMs: 20_000,
-    timeoutMs: matchTimeoutMs,
+    // Runner timeout must exceed monitor's matchTimeoutMs so the monitor
+    // declares a draw before either runner can be reaped on its own timer.
+    timeoutMs: matchTimeoutMs + 30_000,
   })
 }
 
