@@ -78,20 +78,20 @@ const emptySecretPresence: SecretPresence = {
 
 const initialProviderStatuses: Record<ProviderId, ProviderTestStatus> = {
   openai: "idle",
-  anthropic: "unsupported",
+  anthropic: "idle",
   moonshot: "idle",
   e2b: "idle",
 }
 
 const providerCheckingMessages: Record<ProviderId, string> = {
   openai: "Checking OpenAI key...",
-  anthropic: "",
+  anthropic: "Checking Anthropic key...",
   moonshot: "Checking Kimi key...",
   e2b: "Starting E2B sandbox...",
 }
 
 function canValidateProvider(provider: ProviderId) {
-  return provider !== "anthropic"
+  return true
 }
 
 export default function Home() {
@@ -111,9 +111,15 @@ export default function Home() {
   const right = getAgent(rightAgent)
   const task = getTask(taskId)
   const sameAgent = leftAgent === rightAgent
-  const { openai: openaiKey, moonshot: moonshotKey, e2b: e2bKey } = keys
+  const {
+    openai: openaiKey,
+    anthropic: anthropicKey,
+    moonshot: moonshotKey,
+    e2b: e2bKey,
+  } = keys
   const {
     openai: localOpenAiConfigured,
+    anthropic: localAnthropicConfigured,
     moonshot: localMoonshotConfigured,
     e2b: localE2bConfigured,
   } = localSecrets
@@ -202,6 +208,7 @@ export default function Home() {
       localConfigured: boolean
     }> = [
       { provider: "openai", key: openaiKey, localConfigured: localOpenAiConfigured },
+      { provider: "anthropic", key: anthropicKey, localConfigured: localAnthropicConfigured },
       { provider: "moonshot", key: moonshotKey, localConfigured: localMoonshotConfigured },
       { provider: "e2b", key: e2bKey, localConfigured: localE2bConfigured },
     ]
@@ -224,7 +231,9 @@ export default function Home() {
       timeouts.forEach((timeout) => window.clearTimeout(timeout))
     }
   }, [
+    anthropicKey,
     e2bKey,
+    localAnthropicConfigured,
     localE2bConfigured,
     localMoonshotConfigured,
     localOpenAiConfigured,
