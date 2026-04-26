@@ -78,20 +78,20 @@ const emptySecretPresence: SecretPresence = {
 
 const initialProviderStatuses: Record<ProviderId, ProviderTestStatus> = {
   openai: "idle",
-  anthropic: "unsupported",
+  anthropic: "idle",
   moonshot: "idle",
   e2b: "idle",
 }
 
 const providerCheckingMessages: Record<ProviderId, string> = {
   openai: "Checking OpenAI key...",
-  anthropic: "",
+  anthropic: "Checking Anthropic key...",
   moonshot: "Checking Kimi key...",
   e2b: "Starting E2B sandbox...",
 }
 
 function canValidateProvider(provider: ProviderId) {
-  return provider !== "anthropic"
+  return true
 }
 
 export default function Home() {
